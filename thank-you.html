@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <script src="/config.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VeriCampus — Thank You</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: linear-gradient(135deg, #0f172a, #1e1b4b);
+      color: #e6edf3;
+      font-family: Inter, Arial, sans-serif;
+    }
+    main {
+      width: 100%;
+      max-width: 520px;
+      padding: 32px;
+      background: rgba(22,27,34,.94);
+      border: 1px solid #30363d;
+      border-radius: 18px;
+      box-shadow: 0 24px 70px rgba(0,0,0,.4);
+    }
+    h1 { font-size: 28px; margin-bottom: 10px; }
+    .lead { color: #8b949e; line-height: 1.6; margin-bottom: 24px; }
+    .details { display: grid; gap: 10px; margin-bottom: 24px; }
+    .detail {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px 0;
+      border-bottom: 1px solid #30363d;
+      color: #8b949e;
+      font-size: 14px;
+    }
+    .detail strong { color: #e6edf3; text-align: right; overflow-wrap: anywhere; }
+    .status { color: #4ade80; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    a, button {
+      flex: 1;
+      min-width: 140px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      text-align: center;
+      text-decoration: none;
+      color: #fff;
+      background: #6366f1;
+      border: 1px solid #6366f1;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    a.secondary, button.secondary {
+      color: #cbd5e1;
+      background: transparent;
+      border-color: #30363d;
+    }
+    .error { color: #f87171; }
+  </style>
+</head>
+<body>
+  <main id="app">
+    <h1>Thank You</h1>
+    <p class="lead">Loading your VeriCampus details…</p>
+  </main>
+
+  <script>
+    const API = String(window.VERICAMPUS_CONFIG?.API_BASE || "/api").replace(/\/$/, "");
+    const token = sessionStorage.getItem("vc_student_token") || localStorage.getItem("vc_student_token");
+
+    if (!token) {
+      location.replace("/");
+    } else {
+      loadStudent();
+    }
+
+    async function loadStudent() {
+      const app = document.getElementById("app");
+
+      try {
+        const response = await fetch(API + "/student/me", {
+          headers: { Authorization: "Bearer " + token }
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Unable to load student details");
+        }
+
+        const isActive = data.status === "approved";
+        app.innerHTML = `
+          <h1>Thank You</h1>
+          <p class="lead">${isActive ? "Your VeriCampus identity is active." : "Your registration has been received and is awaiting verification."}</p>
+          <div class="details">
+            <div class="detail"><span>Name</span><strong></strong></div>
+            <div class="detail"><span>Student ID</span><strong></strong></div>
+            <div class="detail"><span>Email</span><strong></strong></div>
+            <div class="detail"><span>Status</span><strong class="status"></strong></div>
+          </div>
+          <div class="actions">
+            ${isActive ? `<a href="/student.html?id=${encodeURIComponent(data.student_id)}">View Digital ID</a>` : ""}
+            <a class="secondary" href="/" onclick="clearStudentSession()">Back to Home</a>
+          </div>`;
+
+        const values = app.querySelectorAll(".detail strong");
+        values[0].textContent = data.name;
+        values[1].textContent = data.student_id;
+        values[2].textContent = data.email;
+        values[3].textContent = isActive ? "Active" : "Pending";
+      } catch (error) {
+        sessionStorage.removeItem("vc_student_token");
+        localStorage.removeItem("vc_student_token");
+        sessionStorage.removeItem("vc_student");
+        localStorage.removeItem("vc_student");
+        app.innerHTML = `
+          <h1>Thank You</h1>
+          <p class="lead error">${escapeHtml(error.message)}. Please log in again.</p>
+          <div class="actions"><a href="/" onclick="clearStudentSession()">Back to Home</a></div>`;
+      }
+    }
+
+    function clearStudentSession() {
+      sessionStorage.removeItem("vc_student_token");
+        localStorage.removeItem("vc_student_token");
+      sessionStorage.removeItem("vc_student");
+        localStorage.removeItem("vc_student");
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+  </script>
+</body>
+</html>

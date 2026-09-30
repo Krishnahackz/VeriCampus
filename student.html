@@ -1,0 +1,1654 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <script src="/config.js"></script>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>VeriCampus — Student Profile</title>
+
+  <meta
+    name="description"
+    content="VeriCampus verified student identity card."
+  >
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
+  <style>
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', Arial, sans-serif;
+      min-height: 100vh;
+
+      background:
+        linear-gradient(
+          135deg,
+          #0f172a 0%,
+          #1e1b4b 50%,
+          #0f172a 100%
+        );
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+
+      padding: 32px 16px 48px;
+    }
+
+
+    /* ── TOP BAR ── */
+
+    .topbar {
+      width: 100%;
+      max-width: 480px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      margin-bottom: 28px;
+    }
+
+    .logo {
+      font-size: 18px;
+      font-weight: 800;
+
+      background:
+        linear-gradient(
+          135deg,
+          #818cf8,
+          #34d399
+        );
+
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .verified-chip {
+      display: flex;
+      align-items: center;
+
+      gap: 6px;
+
+      background: rgba(34,197,94,.15);
+
+      border:
+        1px solid
+        rgba(34,197,94,.3);
+
+      color: #4ade80;
+
+      font-size: 12px;
+      font-weight: 600;
+
+      padding: 5px 12px;
+
+      border-radius: 20px;
+    }
+
+    .verified-dot {
+      width: 7px;
+      height: 7px;
+
+      border-radius: 50%;
+
+      background: #4ade80;
+
+      animation:
+        pulse 1.8s
+        ease-in-out
+        infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: .5;
+        transform: scale(.7);
+      }
+
+    }
+
+
+    /* ── ID CARD ── */
+
+    .id-card {
+      width: 100%;
+      max-width: 420px;
+
+      background:
+        linear-gradient(
+          160deg,
+          #1e3a5f 0%,
+          #0f2744 60%,
+          #0a1e38 100%
+        );
+
+      border:
+        1px solid
+        rgba(129,140,248,.25);
+
+      border-radius: 22px;
+
+      overflow: hidden;
+
+      box-shadow:
+        0 32px 80px rgba(0,0,0,.6),
+        0 0 0 1px rgba(255,255,255,.04);
+    }
+
+
+    /* Card top strip */
+
+    .card-header {
+
+      background:
+        linear-gradient(
+          90deg,
+          #1a1a5e,
+          #162044
+        );
+
+      border-bottom:
+        1px solid
+        rgba(255,255,255,.08);
+
+      padding: 18px 22px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 12px;
+    }
+
+    .college-logo {
+
+      width: 48px;
+      height: 48px;
+
+      border-radius: 10px;
+
+      background: #fff;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      font-size: 22px;
+
+      flex-shrink: 0;
+
+      overflow: hidden;
+    }
+
+    .college-logo img {
+
+      width: 100%;
+      height: 100%;
+
+      object-fit: contain;
+
+      padding: 4px;
+
+      display: block;
+    }
+
+    .college-info {
+      flex: 1;
+    }
+
+    .college-name {
+
+      font-size: 15px;
+
+      font-weight: 700;
+
+      color: #e2e8f0;
+
+      line-height: 1.25;
+    }
+
+    .college-sub {
+
+      font-size: 11px;
+
+      color:
+        rgba(148,163,184,.7);
+
+      margin-top: 3px;
+
+      letter-spacing: .5px;
+
+      text-transform: uppercase;
+    }
+
+    .active-badge {
+
+      background:
+        rgba(34,197,94,.2);
+
+      border:
+        1px solid
+        rgba(34,197,94,.4);
+
+      color: #4ade80;
+
+      font-size: 10px;
+
+      font-weight: 700;
+
+      letter-spacing: 1px;
+
+      padding: 4px 10px;
+
+      border-radius: 6px;
+
+      text-transform: uppercase;
+
+      flex-shrink: 0;
+    }
+
+
+    /* Gold divider line */
+
+    .gold-line {
+
+      height: 2px;
+
+      background:
+        linear-gradient(
+          90deg,
+          transparent,
+          #c9a227,
+          transparent
+        );
+    }
+
+
+    /* Student section */
+
+    .card-body {
+
+      padding: 24px 22px;
+
+      display: flex;
+
+      align-items: flex-start;
+
+      gap: 18px;
+    }
+
+    .student-photo-wrap {
+
+      position: relative;
+
+      flex-shrink: 0;
+    }
+
+    .student-photo {
+
+      width: 90px;
+      height: 110px;
+
+      border-radius: 12px;
+
+      object-fit: cover;
+
+      border:
+        2px solid
+        rgba(201,162,39,.5);
+
+      background: #1a2744;
+    }
+
+    .photo-placeholder {
+
+      width: 90px;
+      height: 110px;
+
+      border-radius: 12px;
+
+      background: #1a2744;
+
+      border:
+        2px dashed
+        rgba(129,140,248,.3);
+
+      display: flex;
+
+      align-items: center;
+      justify-content: center;
+
+      font-size: 38px;
+    }
+
+    .student-details {
+
+      flex: 1;
+
+      min-width: 0;
+    }
+
+    .student-name {
+
+      font-size: 20px;
+
+      font-weight: 800;
+
+      color: #f1f5f9;
+
+      line-height: 1.2;
+
+      margin-bottom: 12px;
+    }
+
+    .detail-row {
+
+      display: flex;
+
+      align-items: baseline;
+
+      gap: 6px;
+
+      margin-bottom: 7px;
+    }
+
+    .detail-label {
+
+      font-size: 11px;
+
+      color:
+        rgba(148,163,184,.7);
+
+      font-weight: 600;
+
+      text-transform: uppercase;
+
+      letter-spacing: .6px;
+
+      white-space: nowrap;
+
+      flex-shrink: 0;
+    }
+
+    .detail-value {
+
+      font-size: 13px;
+
+      font-weight: 600;
+
+      color: #cbd5e1;
+    }
+
+    .detail-value.accent {
+
+      color: #818cf8;
+    }
+
+
+    /* QR + ID section */
+
+    .card-footer {
+
+      border-top:
+        1px dashed
+        rgba(255,255,255,.1);
+
+      margin: 0 22px;
+
+      padding: 18px 0;
+
+      display: flex;
+
+      align-items: flex-end;
+
+      justify-content: space-between;
+
+      gap: 16px;
+    }
+
+    .student-id-section {
+
+      flex: 1;
+    }
+
+    .id-label {
+
+      font-size: 10px;
+
+      color:
+        rgba(148,163,184,.5);
+
+      letter-spacing: 1.5px;
+
+      text-transform: uppercase;
+
+      font-weight: 600;
+
+      margin-bottom: 4px;
+    }
+
+    .student-id-number {
+
+      font-size: 22px;
+
+      font-weight: 800;
+
+      color: #c9a227;
+
+      letter-spacing: 1px;
+
+      font-family:
+        'Courier New',
+        monospace;
+    }
+
+    .verified-date {
+
+      font-size: 11px;
+
+      color:
+        rgba(148,163,184,.5);
+
+      margin-top: 5px;
+    }
+
+    #qr-box {
+
+      width: 90px;
+      height: 90px;
+
+      background: #fff;
+
+      border-radius: 10px;
+
+      display: flex;
+
+      align-items: center;
+      justify-content: center;
+
+      flex-shrink: 0;
+
+      overflow: hidden;
+
+      padding: 4px;
+    }
+
+    #qr-box canvas,
+    #qr-box img {
+
+      width: 82px !important;
+      height: 82px !important;
+    }
+
+
+    /* Card bottom strip */
+
+    .card-bottom-strip {
+
+      background:
+        rgba(255,255,255,.03);
+
+      border-top:
+        1px solid
+        rgba(255,255,255,.06);
+
+      padding: 10px 22px;
+
+      text-align: center;
+
+      font-size: 10px;
+
+      color:
+        rgba(148,163,184,.4);
+
+      letter-spacing: .8px;
+
+      text-transform: uppercase;
+    }
+
+
+    /* ── CAPTION ── */
+
+    .card-caption {
+
+      margin-top: 20px;
+
+      text-align: center;
+
+      color:
+        rgba(148,163,184,.6);
+
+      font-size: 13px;
+
+      line-height: 1.6;
+
+      max-width: 400px;
+    }
+
+
+    /* ── ACTION BUTTONS ── */
+
+    .actions {
+
+      display: flex;
+
+      gap: 12px;
+
+      margin-top: 24px;
+
+      width: 100%;
+
+      max-width: 420px;
+
+      flex-wrap: wrap;
+    }
+
+    .btn {
+
+      flex: 1;
+
+      min-width: 120px;
+
+      padding: 14px;
+
+      border-radius: 12px;
+
+      font-size: 14px;
+
+      font-weight: 600;
+
+      font-family: inherit;
+
+      cursor: pointer;
+
+      border: none;
+
+      transition: all .2s;
+    }
+
+    .btn-print {
+
+      background:
+        linear-gradient(
+          135deg,
+          #6366f1,
+          #4f46e5
+        );
+
+      color: #fff;
+
+      box-shadow:
+        0 4px 16px
+        rgba(99,102,241,.35);
+    }
+
+    .btn-print:hover {
+
+      opacity: .9;
+
+      transform: translateY(-1px);
+    }
+
+    .btn-download {
+
+      background:
+        linear-gradient(
+          135deg,
+          #059669,
+          #047857
+        );
+
+      color: #fff;
+
+      box-shadow:
+        0 4px 16px
+        rgba(5,150,105,.30);
+    }
+
+    .btn-download:hover {
+
+      opacity: .9;
+
+      transform: translateY(-1px);
+    }
+
+    .btn-share {
+
+      background:
+        rgba(255,255,255,.07);
+
+      color: #94a3b8;
+
+      border:
+        1px solid
+        rgba(255,255,255,.1);
+    }
+
+    .btn-share:hover {
+
+      background:
+        rgba(255,255,255,.12);
+
+      color: #e2e8f0;
+    }
+
+
+    /* ── LOADING / ERROR ── */
+
+    .state-box {
+
+      text-align: center;
+
+      padding: 60px 20px;
+
+      color:
+        rgba(148,163,184,.6);
+    }
+
+    .state-icon {
+
+      font-size: 52px;
+
+      margin-bottom: 16px;
+    }
+
+    .state-title {
+
+      font-size: 20px;
+
+      font-weight: 700;
+
+      color: #e2e8f0;
+
+      margin-bottom: 8px;
+    }
+
+    .state-msg {
+
+      font-size: 14px;
+
+      line-height: 1.6;
+    }
+
+    .spinner-ring {
+
+      width: 44px;
+      height: 44px;
+
+      border:
+        3px solid
+        rgba(129,140,248,.2);
+
+      border-top-color:
+        #818cf8;
+
+      border-radius: 50%;
+
+      animation:
+        spin .8s linear infinite;
+
+      margin:
+        0 auto 16px;
+    }
+
+    @keyframes spin {
+
+      to {
+        transform: rotate(360deg);
+      }
+
+    }
+
+
+    /* ── MOBILE ── */
+
+    @media (max-width: 480px) {
+
+      body {
+        padding:
+          20px 10px 35px;
+      }
+
+      .card-header {
+        padding:
+          16px 16px;
+      }
+
+      .card-body {
+        padding:
+          20px 16px;
+      }
+
+      .card-footer {
+        margin:
+          0 16px;
+      }
+
+      .college-name {
+        font-size: 13px;
+      }
+
+      .college-sub {
+        font-size: 9px;
+      }
+
+      .active-badge {
+        font-size: 9px;
+        padding: 4px 7px;
+      }
+
+      .student-name {
+        font-size: 17px;
+      }
+
+      .student-photo,
+      .photo-placeholder {
+        width: 78px;
+        height: 98px;
+      }
+
+      .student-id-number {
+        font-size: 18px;
+      }
+
+      .actions {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+      }
+    }
+
+
+    /* ── PRINT ── */
+
+    @media print {
+
+      body {
+
+        background: #fff !important;
+
+        padding: 0;
+      }
+
+      .topbar,
+      .card-caption,
+      .actions {
+
+        display: none !important;
+      }
+
+      .id-card {
+
+        box-shadow: none;
+
+        border:
+          1px solid #ccc;
+
+        border-radius: 12px;
+
+        background:
+          #0f2744 !important;
+
+        -webkit-print-color-adjust: exact;
+
+        print-color-adjust: exact;
+      }
+    }
+
+  </style>
+</head>
+
+
+<body>
+
+
+  <!-- TOP BAR -->
+
+  <div class="topbar">
+
+    <div class="logo">
+      🎓 VeriCampus
+    </div>
+
+    <div
+      class="verified-chip"
+      id="verified-chip"
+      style="display:none"
+    >
+
+      <div class="verified-dot"></div>
+
+      Verified
+
+    </div>
+
+  </div>
+
+
+  <!-- APP -->
+
+  <div id="app">
+
+    <div class="state-box">
+
+      <div class="spinner-ring"></div>
+
+      <div class="state-msg">
+        Loading student profile…
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- QR LIBRARY -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <!-- HTML2CANVAS LIBRARY -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+
+  <script>
+
+
+    /* ─────────────────────────────
+       API CONFIGURATION
+    ───────────────────────────── */
+
+    const API = String(
+      window.VERICAMPUS_CONFIG?.API_BASE || "/api"
+    ).replace(/\/$/, "");
+
+
+    /* ─────────────────────────────
+       STUDENT ID
+    ───────────────────────────── */
+
+    const studentId =
+      new URLSearchParams(location.search).get("id")
+      ||
+      location.pathname.split("/").pop();
+
+
+    /* ─────────────────────────────
+       LOAD STUDENT PROFILE
+    ───────────────────────────── */
+
+    async function load() {
+
+      const app =
+        document.getElementById("app");
+
+
+      if (!studentId) {
+
+        app.innerHTML =
+          errorState(
+            "⚠️",
+            "No Student ID",
+            "No student ID was found in this link."
+          );
+
+        return;
+      }
+
+
+      try {
+
+        const r =
+          await fetch(
+            API +
+            "/student/profile/" +
+            encodeURIComponent(studentId)
+          );
+
+
+        const d =
+          await r.json();
+
+
+        if (!r.ok) {
+
+          app.innerHTML =
+            errorState(
+
+              r.status === 403
+                ? "🔒"
+                : "❌",
+
+              r.status === 403
+                ? "Not Activated"
+                : "Not Found",
+
+              d.message ||
+              "Could not load student profile."
+
+            );
+
+          return;
+        }
+
+
+        renderCard(d, app);
+
+
+      } catch (e) {
+
+        console.error(
+          "Student profile error:",
+          e
+        );
+
+
+        app.innerHTML =
+          errorState(
+
+            "⚠️",
+
+            "Connection Error",
+
+            "Could not reach the VeriCampus server."
+
+          );
+      }
+
+    }
+
+
+    /* ─────────────────────────────
+       RENDER ID CARD
+    ───────────────────────────── */
+
+    function renderCard(s, app) {
+
+
+      document
+        .getElementById("verified-chip")
+        .style.display = "flex";
+
+
+      document.title =
+        s.name +
+        " — VeriCampus Digital ID";
+
+
+      /* VERIFIED DATE */
+
+      const verifiedDate =
+        s.verified_at
+
+          ? new Date(
+              s.verified_at
+            ).toLocaleDateString(
+              "en-IN",
+              {
+                day: "2-digit",
+                month: "long",
+                year: "numeric"
+              }
+            )
+
+          : "";
+
+
+      /* ISSUED DATE */
+
+      const issuedDate =
+        s.created_at
+
+          ? new Date(
+              s.created_at
+            ).toLocaleDateString(
+              "en-IN",
+              {
+                day: "2-digit",
+                month: "long",
+                year: "numeric"
+              }
+            )
+
+          : "";
+
+
+      /* PHOTO */
+
+      const apiOrigin =
+        API.replace(
+          /\/api\/?$/,
+          ""
+        );
+
+
+      const photoUrl =
+        s.photo_path
+
+          ? (
+              s.photo_path.startsWith("http")
+                ? s.photo_path
+                : apiOrigin + s.photo_path
+            )
+
+          : "";
+
+
+      const photoHtml =
+        photoUrl
+
+          ? `
+              <img
+                class="student-photo"
+                src="${esc(photoUrl)}"
+                alt="${esc(s.name)}"
+                crossorigin="anonymous"
+              >
+            `
+
+          : `
+              <div class="photo-placeholder">
+                👤
+              </div>
+            `;
+
+
+      /* ─────────────────────────
+         CARD HTML
+      ───────────────────────── */
+
+      app.innerHTML = `
+
+        <div class="id-card">
+
+
+          <!-- COLLEGE HEADER -->
+
+          <div class="card-header">
+
+            <div class="college-logo">
+
+              <img
+                src="assets/vivek-logo.png"
+                alt="Vivek College of Commerce Logo"
+                crossorigin="anonymous"
+              >
+
+            </div>
+
+
+            <div class="college-info">
+
+              <div class="college-name">
+                Vivek College of Commerce
+              </div>
+
+              <div class="college-sub">
+                (Autonomous) · VeriCampus Digital ID
+              </div>
+
+            </div>
+
+
+            <div class="active-badge">
+              Active
+            </div>
+
+          </div>
+
+
+          <!-- GOLD LINE -->
+
+          <div class="gold-line"></div>
+
+
+          <!-- STUDENT BODY -->
+
+          <div class="card-body">
+
+            <div class="student-photo-wrap">
+
+              ${photoHtml}
+
+            </div>
+
+
+            <div class="student-details">
+
+              <div class="student-name">
+                ${esc(s.name)}
+              </div>
+
+
+              ${
+                s.course
+                  ? `
+                    <div class="detail-row">
+
+                      <span class="detail-label">
+                        Course
+                      </span>
+
+                      <span class="detail-value accent">
+                        ${esc(s.course)}
+                      </span>
+
+                    </div>
+                  `
+                  : ""
+              }
+
+
+              ${
+                s.year_name
+                  ? `
+                    <div class="detail-row">
+
+                      <span class="detail-label">
+                        Year
+                      </span>
+
+                      <span class="detail-value">
+                        ${esc(s.year_name)}
+                      </span>
+
+                    </div>
+                  `
+                  : ""
+              }
+
+
+              ${
+                s.division
+                  ? `
+                    <div class="detail-row">
+
+                      <span class="detail-label">
+                        Div.
+                      </span>
+
+                      <span class="detail-value">
+                        ${esc(s.division)}
+                      </span>
+
+                    </div>
+                  `
+                  : ""
+              }
+
+
+              ${
+                s.email
+                  ? `
+                    <div class="detail-row">
+
+                      <span class="detail-label">
+                        Email
+                      </span>
+
+                      <span
+                        class="detail-value"
+                        style="
+                          font-size:11px;
+                          word-break:break-all
+                        "
+                      >
+                        ${esc(s.email)}
+                      </span>
+
+                    </div>
+                  `
+                  : ""
+              }
+
+
+              ${
+                s.phone
+                  ? `
+                    <div class="detail-row">
+
+                      <span class="detail-label">
+                        Phone
+                      </span>
+
+                      <span class="detail-value">
+                        ${esc(s.phone)}
+                      </span>
+
+                    </div>
+                  `
+                  : ""
+              }
+
+            </div>
+
+          </div>
+
+
+          <!-- QR + STUDENT ID -->
+
+          <div class="card-footer">
+
+            <div class="student-id-section">
+
+              <div class="id-label">
+                Student ID
+              </div>
+
+              <div class="student-id-number">
+                ${esc(s.student_id)}
+              </div>
+
+
+              ${
+                verifiedDate
+                  ? `
+                    <div class="verified-date">
+                      ✓ Verified on ${verifiedDate}
+                    </div>
+                  `
+                  : ""
+              }
+
+            </div>
+
+
+            <div id="qr-box"></div>
+
+          </div>
+
+
+          <!-- CARD BOTTOM STRIP -->
+
+          <div class="card-bottom-strip">
+
+            Vivek College of Commerce
+            (Autonomous) · VeriCampus ·
+            ${issuedDate}
+
+          </div>
+
+
+        </div>
+
+
+        <!-- CARD CAPTION -->
+
+        <p class="card-caption">
+
+          Present this QR code to staff
+          for identity verification.
+
+          <br>
+
+          This card is digitally verified
+          by Vivek College of Commerce.
+
+        </p>
+
+
+        <!-- ACTION BUTTONS -->
+
+        <div class="actions">
+
+
+          <!-- PRINT -->
+
+          <button
+            class="btn btn-print"
+            onclick="window.print()"
+          >
+            🖨️ Print / Save PDF
+          </button>
+
+
+          <!-- DOWNLOAD -->
+
+          <button
+            class="btn btn-download"
+            onclick="downloadCard()"
+          >
+            ⬇️ Download ID
+          </button>
+
+
+          <!-- SHARE -->
+
+          <button
+            class="btn btn-share"
+            onclick="shareCard('${esc(s.student_id)}')"
+          >
+            🔗 Share Link
+          </button>
+
+
+        </div>
+
+      `;
+
+
+      /* ─────────────────────────
+         GENERATE QR CODE
+      ───────────────────────── */
+
+      const profileUrl =
+        window.location.origin +
+        "/student.html?id=" +
+        encodeURIComponent(
+          s.student_id
+        );
+
+
+      new QRCode(
+        document.getElementById("qr-box"),
+        {
+
+          text: profileUrl,
+
+          width: 82,
+
+          height: 82,
+
+          colorDark: "#000000",
+
+          colorLight: "#ffffff",
+
+          correctLevel:
+            QRCode.CorrectLevel.M
+
+        }
+      );
+
+    }
+
+
+    /* ─────────────────────────────
+       ERROR STATE
+    ───────────────────────────── */
+
+    function errorState(
+      icon,
+      title,
+      msg
+    ) {
+
+      return `
+
+        <div class="state-box">
+
+          <div class="state-icon">
+            ${icon}
+          </div>
+
+          <div class="state-title">
+            ${title}
+          </div>
+
+          <div class="state-msg">
+            ${msg}
+          </div>
+
+        </div>
+
+      `;
+
+    }
+
+
+    /* ─────────────────────────────
+       ESCAPE HTML
+    ───────────────────────────── */
+
+    function esc(s) {
+
+      return String(s || "")
+
+        .replace(
+          /&/g,
+          "&amp;"
+        )
+
+        .replace(
+          /</g,
+          "&lt;"
+        )
+
+        .replace(
+          />/g,
+          "&gt;"
+        )
+
+        .replace(
+          /"/g,
+          "&quot;"
+        );
+
+    }
+
+
+    /* ─────────────────────────────
+       DOWNLOAD ID CARD
+    ───────────────────────────── */
+
+    async function downloadCard() {
+
+
+      const card =
+        document.querySelector(
+          ".id-card"
+        );
+
+
+      if (!card) {
+
+        alert(
+          "ID card is not ready yet."
+        );
+
+        return;
+      }
+
+
+      try {
+
+
+        /*
+          Wait a little so that
+          QR code and images are
+          fully rendered.
+        */
+
+        await new Promise(
+          resolve =>
+            setTimeout(
+              resolve,
+              300
+            )
+        );
+
+
+        /*
+          Convert ID card to canvas.
+          scale 3 = high quality.
+        */
+
+        const canvas =
+          await html2canvas(
+            card,
+            {
+
+              scale: 3,
+
+              useCORS: true,
+
+              allowTaint: false,
+
+              backgroundColor: null,
+
+              logging: false
+
+            }
+          );
+
+
+        /*
+          Create download link.
+        */
+
+        const link =
+          document.createElement(
+            "a"
+          );
+
+
+        link.download =
+          "VeriCampus-ID-Card-" +
+          studentId +
+          ".png";
+
+
+        link.href =
+          canvas.toDataURL(
+            "image/png"
+          );
+
+
+        document
+          .body
+          .appendChild(link);
+
+
+        link.click();
+
+
+        document
+          .body
+          .removeChild(link);
+
+
+      } catch (error) {
+
+
+        console.error(
+          "ID card download error:",
+          error
+        );
+
+
+        alert(
+          "Unable to download the ID card. Please try again."
+        );
+
+      }
+
+    }
+
+
+    /* ─────────────────────────────
+       SHARE CARD
+    ───────────────────────────── */
+
+    async function shareCard(id) {
+
+
+      const url =
+        window.location.origin +
+        "/student.html?id=" +
+        encodeURIComponent(id);
+
+
+      try {
+
+
+        if (
+          navigator.share
+        ) {
+
+
+          await navigator.share({
+
+            title:
+              "VeriCampus Student ID",
+
+            url:
+              url
+
+          });
+
+
+        } else {
+
+
+          await navigator
+            .clipboard
+            .writeText(url);
+
+
+          alert(
+            "Link copied to clipboard!"
+          );
+
+        }
+
+
+      } catch (error) {
+
+
+        /*
+          User cancelled the
+          native share menu.
+          No error alert needed.
+        */
+
+        if (
+          error.name !==
+          "AbortError"
+        ) {
+
+          console.error(
+            "Share error:",
+            error
+          );
+
+        }
+
+      }
+
+    }
+
+
+    /* ─────────────────────────────
+       START
+    ───────────────────────────── */
+
+    load();
+
+
+  </script>
+
+
+</body>
+</html>

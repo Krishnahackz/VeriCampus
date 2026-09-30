@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="/config.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>VeriCampus | QR Attendance</title>
+
+    <!-- QR Scanner Library -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f6fb;
+            color: #17233c;
+        }
+
+        .wrap {
+            max-width: 760px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 30px #13264a12;
+        }
+
+        h1 {
+            margin-top: 0;
+            color: #173e79;
+        }
+
+        .muted {
+            color: #667085;
+        }
+
+        #reader {
+            width: 100%;
+            max-width: 100%;
+            margin: 15px 0;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+
+        #reader video {
+            width: 100% !important;
+            border-radius: 12px;
+        }
+
+        button {
+            border: 0;
+            border-radius: 9px;
+            padding: 12px 18px;
+            background: #174a91;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            margin: 5px 4px 5px 0;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        input {
+            padding: 12px;
+            border: 1px solid #ccd4e0;
+            border-radius: 8px;
+            width: 100%;
+            margin: 8px 0;
+        }
+
+        .result {
+            padding: 14px;
+            border-radius: 10px;
+            background: #eef4ff;
+            margin-top: 14px;
+            white-space: pre-line;
+            overflow-wrap: anywhere;
+        }
+
+        .error {
+            background: #fff0f0;
+            color: #9b1c1c;
+        }
+
+        .ok {
+            background: #eaf8ef;
+            color: #176534;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid #e5e9f0;
+            font-size: 14px;
+        }
+
+        @media (max-width: 600px) {
+            .wrap {
+                margin: 10px auto;
+                padding: 10px;
+            }
+
+            .card {
+                padding: 16px;
+            }
+
+            button {
+                padding: 11px 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="wrap">
+
+        <section class="card">
+
+            <h1>📷 QR Code Attendance</h1>
+
+            <p class="muted">
+                Scan the student's ID-card QR code.
+                First scan marks IN; the next scan marks OUT.
+            </p>
+
+            <!-- QR CAMERA SCANNER -->
+            <div id="reader"></div>
+
+            <div>
+                <button id="start">Start Camera</button>
+                <button id="stop">Stop Camera</button>
+            </div>
+
+            <label for="manual">
+                Or enter Student ID manually
+            </label>
+
+            <input
+                id="manual"
+                placeholder="10-digit Student ID"
+                inputmode="numeric"
+                maxlength="10"
+            >
+
+            <button id="submit">
+                Mark Attendance
+            </button>
+
+            <div id="result" class="result">
+                Waiting for scan…
+            </div>
+
+            <h2>Attendance Records</h2>
+
+            <div class="table-wrap">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Name</th>
+                            <th>Date</th>
+                            <th>IN</th>
+                            <th>OUT</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="records">
+                        <tr>
+                            <td colspan="5">Loading...</td>
+                        </tr>
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <script>
+
+        // =====================================
+        // API SETTINGS
+        // =====================================
+
+        const API = String(window.VERICAMPUS_CONFIG?.API_BASE || "/api").replace(/\/$/, "");
+
+        const result = document.getElementById("result");
+        const manual = document.getElementById("manual");
+        const submitBtn = document.getElementById("submit");
+        const startBtn = document.getElementById("start");
+        const stopBtn = document.getElementById("stop");
+
+        const params = new URLSearchParams(location.search);
+
+        let token = "";
+
+        window.addEventListener("message", event => {
+            if (event.origin !== location.origin) return;
+            if (event.data?.type !== "VERICAMPUS_READER_TOKEN") return;
+            token = String(event.data.token || "");
+            if (token) show("Secure admin session connected. QR reader is ready.", true);
+        });
+
+        let html5QrCode = null;
+        let scanning = false;
+        let processing = false;
+        let lastValue = "";
+        let lastAt = 0;
+
+
+        // =====================================
+        // MESSAGE
+        // =====================================
+
+        function show(message, success = false) {
+
+            result.textContent = message;
+
+            result.className =
+                "result " + (success ? "ok" : "error");
+
+        }
+
+
+        // =====================================
+        // EXTRACT STUDENT ID FROM QR
+        // =====================================
+
+        function extractStudentId(value) {
+
+            value = String(value || "").trim();
+
+            if (!value) {
+                return "";
+            }
+
+            // QR contains JSON
+            try {
+
+                const data = JSON.parse(value);
+
+                value =
+                    data.student_id ||
+                    data.studentId ||
+                    data.id ||
+                    value;
+
+            } catch (error) {
+                // Continue with normal QR text
+            }
+
+            // QR contains URL
+            try {
+
+                const url = new URL(value);
+
+                value =
+                    url.searchParams.get("student_id") ||
+                    url.searchParams.get("studentId") ||
+                    url.searchParams.get("id") ||
+                    value;
+
+            } catch (error) {
+                // Not a URL
+            }
+
+            // Extract 10-digit student ID
+            const match = String(value).match(/\d{10}/);
+
+            return match ? match[0] : String(value).trim();
+
+        }
+
+
+        // =====================================
+        // MARK ATTENDANCE
+        // =====================================
+
+        async function scanId(id) {
+
+            id = String(id || "").trim();
+
+            if (!id) {
+
+                show("Please scan or enter a Student ID.");
+
+                return;
+            }
+
+            if (!token) {
+
+                show(
+                    "Login token missing. Please open this page from the Admin dashboard."
+                );
+
+                return;
+            }
+
+            if (processing) {
+                return;
+            }
+
+            processing = true;
+            submitBtn.disabled = true;
+
+            try {
+
+                const response = await fetch(
+                    API + "/attendance/scan",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": "Bearer " + token
+                        },
+
+                        body: JSON.stringify({
+                            student_id: id
+                        })
+                    }
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        data.message || "Attendance scan failed"
+                    );
+
+                }
+
+                const now = new Date();
+
+                show(
+                    `${data.student.name} (${data.student.student_id})
+${data.message}
+Date: ${now.toLocaleDateString()}
+Time: ${now.toLocaleTimeString()}`,
+                    true
+                );
+
+                manual.value = "";
+
+                await loadRecords();
+
+            } catch (error) {
+
+                show(error.message);
+
+            } finally {
+
+                processing = false;
+                submitBtn.disabled = false;
+
+            }
+
+        }
+
+
+        // =====================================
+        // MANUAL STUDENT ID
+        // =====================================
+
+        submitBtn.onclick = () => {
+
+            const id = extractStudentId(manual.value);
+
+            scanId(id);
+
+        };
+
+
+        // =====================================
+        // QR SCAN SUCCESS
+        // =====================================
+
+        async function onScanSuccess(decodedText) {
+
+            const now = Date.now();
+
+            // Prevent repeated scans of the same QR
+            if (
+                decodedText === lastValue &&
+                now - lastAt < 5000
+            ) {
+                return;
+            }
+
+            lastValue = decodedText;
+            lastAt = now;
+
+            const id = extractStudentId(decodedText);
+
+            if (!id) {
+
+                show("Invalid QR code. Student ID not found.");
+
+                return;
+            }
+
+            await scanId(id);
+
+        }
+
+
+        // =====================================
+        // START CAMERA
+        // =====================================
+
+        startBtn.onclick = async () => {
+
+            try {
+
+                if (!token) {
+
+                    throw new Error(
+                        "Login token missing. Please open this page from the Admin dashboard."
+                    );
+
+                }
+
+                if (scanning) {
+
+                    show("Camera is already running.", true);
+
+                    return;
+                }
+
+                if (typeof Html5Qrcode === "undefined") {
+
+                    throw new Error(
+                        "QR scanner library could not load. Please check your internet connection and reload the page."
+                    );
+
+                }
+
+                html5QrCode = new Html5Qrcode("reader");
+
+                startBtn.disabled = true;
+
+                await html5QrCode.start(
+
+                    {
+                        facingMode: "environment"
+                    },
+
+                    {
+                        fps: 10,
+
+                        qrbox: function(viewWidth, viewHeight) {
+
+                            const size = Math.floor(
+                                Math.min(viewWidth, viewHeight) * 0.7
+                            );
+
+                            return {
+                                width: size,
+                                height: size
+                            };
+
+                        },
+
+                        aspectRatio: 1.0
+
+                    },
+
+                    onScanSuccess,
+
+                    function(errorMessage) {
+                        // Ignore normal scanning errors
+                    }
+
+                );
+
+                scanning = true;
+
+                show(
+                    "Camera started. Scan the student's QR code.",
+                    true
+                );
+
+            } catch (error) {
+
+                console.error("Camera error:", error);
+
+                show(
+                    error.message ||
+                    "Camera could not start. Please allow camera permission."
+                );
+
+                if (html5QrCode) {
+
+                    try {
+
+                        if (html5QrCode.isScanning) {
+                            await html5QrCode.stop();
+                        }
+
+                    } catch (stopError) {
+                        console.error(stopError);
+                    }
+
+                    html5QrCode = null;
+
+                }
+
+            } finally {
+
+                startBtn.disabled = false;
+
+            }
+
+        };
+
+
+        // =====================================
+        // STOP CAMERA
+        // =====================================
+
+        stopBtn.onclick = async () => {
+
+            try {
+
+                if (
+                    html5QrCode &&
+                    html5QrCode.isScanning
+                ) {
+
+                    await html5QrCode.stop();
+
+                    await html5QrCode.clear();
+
+                }
+
+                html5QrCode = null;
+                scanning = false;
+
+                show("Camera stopped.", true);
+
+            } catch (error) {
+
+                console.error("Stop camera error:", error);
+
+                show("Could not stop the camera.");
+
+            }
+
+        };
+
+
+        // =====================================
+        // LOAD ATTENDANCE RECORDS
+        // =====================================
+
+        async function loadRecords() {
+
+            const tbody = document.getElementById("records");
+
+            if (!token) {
+
+                tbody.innerHTML =
+                    "<tr><td colspan='5'>Login required to view attendance.</td></tr>";
+
+                return;
+            }
+
+            try {
+
+                const response = await fetch(
+                    API + "/attendance",
+                    {
+                        headers: {
+                            "Authorization": "Bearer " + token
+                        }
+                    }
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        data.message || "Could not load attendance"
+                    );
+
+                }
+
+                const records = data.attendance || [];
+
+                tbody.innerHTML = "";
+
+                if (!records.length) {
+
+                    tbody.innerHTML =
+                        "<tr><td colspan='5'>No records yet</td></tr>";
+
+                    return;
+
+                }
+
+                records.forEach(attendance => {
+
+                    const row = document.createElement("tr");
+
+                    const values = [
+                        attendance.student_id,
+                        attendance.name,
+                        String(attendance.attendance_date).slice(0, 10),
+
+                        attendance.in_time
+                            ? new Date(attendance.in_time).toLocaleTimeString()
+                            : "",
+
+                        attendance.out_time
+                            ? new Date(attendance.out_time).toLocaleTimeString()
+                            : "—"
+                    ];
+
+                    values.forEach(value => {
+
+                        const cell = document.createElement("td");
+
+                        cell.textContent = value ?? "";
+
+                        row.appendChild(cell);
+
+                    });
+
+                    tbody.appendChild(row);
+
+                });
+
+            } catch (error) {
+
+                tbody.innerHTML =
+                    `<tr><td colspan="5">${error.message}</td></tr>`;
+
+            }
+
+        }
+
+
+        // =====================================
+        // INITIAL LOAD
+        // =====================================
+
+        loadRecords();
+
+    </script>
+
+</body>
+
+</html>
